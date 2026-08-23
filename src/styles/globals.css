@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-ink-900 font-body text-paper antialiased;
+  }
+
+  ::selection {
+    @apply bg-seal/30 text-paper;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-seal;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  .eyebrow {
+    @apply font-mono text-xs uppercase tracking-[0.2em] text-seal;
+  }
+
+  .ledger-row {
+    @apply grid grid-cols-[3rem_1fr] items-start gap-4 border-t border-rule/60 py-6 first:border-t-0 sm:grid-cols-[4rem_1fr_auto] sm:gap-6;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center gap-2 rounded-sm bg-seal px-5 py-3 font-body text-sm font-semibold text-ink-900 transition hover:bg-seal-light;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center gap-2 rounded-sm border border-ink-600 px-5 py-3 font-body text-sm font-semibold text-paper transition hover:border-seal hover:text-seal;
+  }
+}
