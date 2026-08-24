@@ -118,7 +118,13 @@ output directory, and — importantly — a rewrite rule so client-side routes (
    must be set on the host, not just in a local `.env`:
    - `VITE_API_URL` → the backend URL from the step above.
    - `VITE_WHATSAPP_NUMBER`
-   - `VITE_SITE_URL` → the frontend's own final URL, once known.
+   - `VITE_SITE_URL` → the frontend's own final URL, once known. Also used at build
+     time to generate `dist/sitemap.xml` and `dist/robots.txt` (see
+     `frontend/scripts/generate-seo-files.mjs`) and to fill in Open
+     Graph/Twitter-card/canonical URLs in `index.html`. Falls back to
+     `https://enochlabs.dev` if unset, so the build never fails without it — but set
+     it to the real domain once one is live, or social previews and the sitemap will
+     point at the wrong place.
 3. Deploy. Every push to `main` that touches `frontend/` redeploys automatically via
    Vercel's own GitHub integration.
 4. Optionally, wire `.github/workflows/deploy-frontend.yml` instead/in addition if you
