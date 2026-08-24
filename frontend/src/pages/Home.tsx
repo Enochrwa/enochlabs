@@ -5,8 +5,14 @@ import { ServiceLedgerRow } from "@/components/service-ledger-row";
 import { ProcessSteps } from "@/components/process-steps";
 import { services } from "@/content/services";
 import { process } from "@/content/process";
+import { useDocumentTitle } from "@/lib/use-document-title";
 
 export function Home() {
+  useDocumentTitle(
+    "EnochLabs — Affordable digital solutions for growing businesses",
+    "EnochLabs helps small and growing businesses in Rwanda establish an online presence, manage their operations, and grow — through affordable websites, business software, and ongoing support.",
+  );
+
   return (
     <>
       <Hero />

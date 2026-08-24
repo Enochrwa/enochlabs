@@ -1,6 +1,9 @@
 import { Link } from "react-router-dom";
+import { useDocumentTitle } from "@/lib/use-document-title";
 
 export function NotFound() {
+  useDocumentTitle("Page not found", "The page you're looking for doesn't exist.");
+
   return (
     <section className="mx-auto flex max-w-content flex-col items-start px-6 py-32">
       <p className="eyebrow">404</p>
