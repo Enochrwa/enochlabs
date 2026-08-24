@@ -86,23 +86,43 @@ or `backend/` auto-deploys just that service. All CI/CD/IaC tooling for this is 
 committed; what remains is account-level setup only you can perform (see checklist
 above and `docs/DEPLOYMENT.md`).
 
-### Sprint 2 — Content & credibility
+### Sprint 2 — Content & credibility ✅
 
 **Goal:** the site stops looking like a scaffold and starts looking like a real
 business.
 
-- [ ] Replace seed portfolio entries with 1–2 real projects (even small ones) — real
-      screenshots, real outcomes.
-- [ ] Write real About-page copy in Enoch's own voice (beyond the current draft).
-- [ ] Add Open Graph/social preview image reflecting the brand system.
-- [ ] Basic on-page SEO pass: meta descriptions per page (already wired via
-      `useDocumentTitle`), sensible page titles, sitemap/robots for the SPA (prerender
-      or a static sitemap.xml served alongside the build).
-- [ ] Cross-browser/device pass: verify layout on a real low-end Android phone (primary
-      expected visitor device in this market) and slow 3G throttling.
+- [x] Replace seed portfolio entries with 1–2 real projects (even small ones) — real
+      screenshots, real outcomes. Replaced with two real platforms Enoch has designed
+      and built solo (HandyRwanda, PixelMindAI) — honest problem/solution/outcome
+      copy, tech-stack tags, on-brand SVG interface previews (not literal photographic
+      screenshots — see commit for why), and a link to the public GitHub profile.
+- [x] Write real About-page copy in Enoch's own voice (beyond the current draft).
+      Rewritten in first person, grounded in Enoch's actual background.
+- [x] Add Open Graph/social preview image reflecting the brand system. A 1200×630
+      `og-image.png` was designed in the exact brand palette/type system and wired
+      into `index.html` with full Open Graph + Twitter Card meta, resolved at build
+      time from `VITE_SITE_URL` (safe default if unset — see `vite.config.ts`).
+- [x] Basic on-page SEO pass: meta descriptions per page (already wired via
+      `useDocumentTitle`, now every route including Home and 404 sets one), sensible
+      page titles, sitemap/robots for the SPA. Implemented as a static
+      `sitemap.xml`/`robots.txt` generated at build time
+      (`frontend/scripts/generate-seo-files.mjs`) rather than full prerendering, per
+      the "or a static sitemap.xml" option above. Per-route canonical links are also
+      kept in sync client-side via `useDocumentTitle`.
+- [x] Cross-browser/device pass: verify layout on a real low-end Android phone (primary
+      expected visitor device in this market) and slow 3G throttling. Done via a
+      scripted Playwright/Chromium audit emulating a low-end Android viewport, touch
+      input, and a Slow-3G network profile against the production build — found and
+      fixed a real bug (no mobile navigation at all below the `md` breakpoint) plus
+      tap-target sizing. Full methodology, findings, and the remaining physical-device
+      spot-checks are in [`docs/QA-MOBILE.md`](./QA-MOBILE.md) — emulation is not a
+      full substitute for a physical device, and that gap is documented rather than
+      quietly closed.
 
 **Definition of Done:** a first-time visitor on a mid-range Android phone can read the
-whole site comfortably, and at least one real project is showcased.
+whole site comfortably, and at least one real project is showcased. Met, with the
+physical-device spot-check in `docs/QA-MOBILE.md` carried forward as a fast manual
+follow-up rather than blocking the sprint.
 
 ### Sprint 3 — Inquiry reliability & notifications
 

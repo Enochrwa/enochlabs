@@ -20,7 +20,8 @@ restaurants, hotels, salons, clinics, schools, startups, and the people who run 
 [Low-level design](docs/LLD.md) ·
 [Brand guidelines](docs/BRAND-GUIDELINES.md) ·
 [Roadmap](docs/ROADMAP.md) ·
-[Sprint plan](docs/SPRINT-PLAN.md)
+[Sprint plan](docs/SPRINT-PLAN.md) ·
+[Mobile QA](docs/QA-MOBILE.md)
 
 </div>
 

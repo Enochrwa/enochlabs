@@ -10,24 +10,24 @@ export function SiteFooter() {
           </p>
           <p className="mt-1 font-body text-sm text-ink-100/60">Kigali, Rwanda</p>
         </div>
-        <nav className="flex flex-wrap gap-x-6 gap-y-2 font-body text-sm text-ink-100/70">
-          <Link to="/services" className="transition hover:text-seal">
+        <nav className="-my-2 flex flex-wrap gap-x-6 font-body text-sm text-ink-100/70">
+          <Link to="/services" className="inline-flex items-center py-2 transition hover:text-seal">
             Services
           </Link>
-          <Link to="/work" className="transition hover:text-seal">
+          <Link to="/work" className="inline-flex items-center py-2 transition hover:text-seal">
             Work
           </Link>
-          <Link to="/pricing" className="transition hover:text-seal">
+          <Link to="/pricing" className="inline-flex items-center py-2 transition hover:text-seal">
             Pricing
           </Link>
-          <Link to="/contact" className="transition hover:text-seal">
+          <Link to="/contact" className="inline-flex items-center py-2 transition hover:text-seal">
             Contact
           </Link>
           <a
             href="https://github.com/Enochrwa"
             target="_blank"
             rel="noreferrer"
-            className="transition hover:text-seal"
+            className="inline-flex items-center py-2 transition hover:text-seal"
           >
             GitHub
           </a>
