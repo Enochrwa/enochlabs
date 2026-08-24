@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" role="img" aria-labelledby="pm-title">
+  <title id="pm-title">PixelMindAI interface preview — document scanning dashboard</title>
+  <defs>
+    <linearGradient id="pm-bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1B1F29" />
+      <stop offset="1" stop-color="#12151C" />
+    </linearGradient>
+  </defs>
+  <rect width="800" height="500" fill="url(#pm-bg)" />
+
+  <!-- window chrome -->
+  <rect x="0" y="0" width="800" height="44" fill="#1B1F29" />
+  <circle cx="24" cy="22" r="6" fill="#3A4256" />
+  <circle cx="46" cy="22" r="6" fill="#3A4256" />
+  <circle cx="68" cy="22" r="6" fill="#3A4256" />
+  <rect x="310" y="12" width="180" height="20" rx="4" fill="#12151C" />
+  <text x="400" y="26" font-family="IBM Plex Mono, monospace" font-size="11" fill="#5C6478" text-anchor="middle">pixelmind.ai/scan</text>
+
+  <text x="40" y="88" font-family="Fraunces, serif" font-size="22" font-weight="500" fill="#F3F0E8">Pixel<tspan fill="#E8B34C">Mind</tspan>AI</text>
+  <text x="40" y="110" font-family="Inter, sans-serif" font-size="12" fill="#8A91A6">Scan a receipt, invoice, or form — get structured data back</text>
+
+  <!-- document preview panel -->
+  <rect x="40" y="140" width="330" height="300" fill="#1B1F29" stroke="#3A4256" />
+  <rect x="64" y="164" width="282" height="18" fill="#343B4C" />
+  <rect x="64" y="192" width="230" height="10" fill="#343B4C" />
+  <rect x="64" y="210" width="260" height="10" fill="#343B4C" />
+  <rect x="64" y="228" width="180" height="10" fill="#343B4C" />
+  <line x1="64" y1="256" x2="346" y2="256" stroke="#3A4256" stroke-dasharray="3 3" />
+  <rect x="64" y="272" width="120" height="10" fill="#343B4C" />
+  <rect x="240" y="272" width="70" height="10" fill="#2F8F7B" fill-opacity="0.5" />
+  <rect x="64" y="292" width="120" height="10" fill="#343B4C" />
+  <rect x="240" y="292" width="70" height="10" fill="#2F8F7B" fill-opacity="0.5" />
+  <rect x="64" y="312" width="120" height="10" fill="#343B4C" />
+  <rect x="240" y="312" width="70" height="10" fill="#E8B34C" fill-opacity="0.6" />
+  <text x="64" y="410" font-family="IBM Plex Mono, monospace" font-size="10" letter-spacing="1" fill="#5C6478">SOURCE DOCUMENT</text>
+
+  <!-- extracted fields panel -->
+  <rect x="404" y="140" width="356" height="300" fill="#1B1F29" stroke="#3A4256" />
+  <text x="428" y="170" font-family="IBM Plex Mono, monospace" font-size="10" letter-spacing="1" fill="#5C6478">EXTRACTED FIELDS</text>
+
+  <g font-family="Inter, sans-serif" font-size="12">
+    <text x="428" y="198" fill="#8A91A6">Vendor</text>
+    <text x="736" y="198" fill="#F3F0E8" text-anchor="end">Kigali Hardware Ltd</text>
+    <line x1="428" y1="208" x2="736" y2="208" stroke="#3A4256" />
+
+    <text x="428" y="232" fill="#8A91A6">Invoice date</text>
+    <text x="736" y="232" fill="#F3F0E8" text-anchor="end">04 Mar</text>
+    <line x1="428" y1="242" x2="736" y2="242" stroke="#3A4256" />
+
+    <text x="428" y="266" fill="#8A91A6">Amount</text>
+    <text x="736" y="266" fill="#2F8F7B" text-anchor="end">86,400 RWF</text>
+    <line x1="428" y1="276" x2="736" y2="276" stroke="#3A4256" />
+
+    <text x="428" y="300" fill="#8A91A6">Document type</text>
+    <text x="736" y="300" fill="#E8B34C" text-anchor="end">Invoice</text>
+    <line x1="428" y1="310" x2="736" y2="310" stroke="#3A4256" />
+
+    <text x="428" y="334" fill="#8A91A6">Confidence</text>
+    <text x="736" y="334" fill="#F3F0E8" text-anchor="end">98.2%</text>
+  </g>
+
+  <rect x="428" y="380" width="130" height="34" rx="3" fill="#E8B34C" />
+  <text x="493" y="401" font-family="Inter, sans-serif" font-size="12" font-weight="600" fill="#12151C" text-anchor="middle">Save record</text>
+</svg>
