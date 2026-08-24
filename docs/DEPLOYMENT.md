@@ -1,7 +1,9 @@
 # Deployment
 
 The frontend and backend deploy independently. Each has its own CI gate and its own
-CD workflow.
+CD path. This document covers local development, then the concrete steps to take the
+app to production using the config already committed in this repo
+(`render.yaml`, `frontend/vercel.json`).
 
 ## Local development (all services together)
 
@@ -12,26 +14,35 @@ cp backend/.env.example backend/.env
 docker compose up --build
 ```
 
-This starts Postgres, the FastAPI backend (`http://localhost:8000`, docs at
-`/docs`), and the Vite dev server (`http://localhost:5173`) with hot reload on both
-sides. First run: apply migrations inside the backend container:
+Or with `make`:
+
+```bash
+make dev
+```
+
+This starts Postgres, the FastAPI backend (`http://localhost:8000`, docs at `/docs`),
+and the Vite dev server (`http://localhost:5173`) with hot reload on both sides.
+First run: apply migrations inside the backend container:
 
 ```bash
 docker compose exec backend alembic upgrade head
 ```
 
-Without Docker, run each piece directly — see `frontend/README` usage in the root
-`README.md` and the backend quick-start below.
-
 ### Backend without Docker
 
 ```bash
-cd backend
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements-dev.txt
-cp .env.example .env   # point DATABASE_URL at a local Postgres
-alembic upgrade head
-uvicorn app.main:app --reload
+make backend-install   # creates backend/.venv and installs requirements-dev.txt
+cp backend/.env.example backend/.env   # point DATABASE_URL at a local Postgres
+make migrate
+make backend-dev
+```
+
+### Frontend without Docker
+
+```bash
+make frontend-install
+cp frontend/.env.example frontend/.env   # point VITE_API_URL at the backend
+make frontend-dev
 ```
 
 ## CI
@@ -44,53 +55,116 @@ uvicorn app.main:app --reload
 Both must pass before a PR merges; scoping by path keeps feedback fast and avoids
 unrelated failures blocking unrelated changes.
 
-## CD — Frontend (`.github/workflows/deploy-frontend.yml`)
+## Going to production
 
-Deploys `frontend/` to Vercel (or swap for Netlify/Cloudflare Pages) on every push to
-`main` that touches `frontend/`. One-time setup:
+### Backend — Render, via the committed Blueprint (recommended)
 
-1. Create a project on the chosen static host, pointed at the `frontend/` subdirectory
-   as the project root.
-2. Add these **Actions secrets**: `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`
-   (from `vercel link` inside `frontend/`).
-3. Set the frontend's runtime env vars (`VITE_API_URL` pointing at the deployed
-   backend, `VITE_WHATSAPP_NUMBER`, etc.) in the host's project settings — these are
-   baked in at build time for a Vite app, so they must be set on the host, not just in
-   `.env`.
-4. Push to `main` — the workflow builds and deploys automatically.
+`render.yaml` at the repo root is a
+[Render Blueprint](https://render.com/docs/blueprint-spec) — infrastructure as code
+that provisions **both** the backend web service **and** a managed PostgreSQL instance
+in one step, and wires them together automatically.
 
-## CD — Backend (`.github/workflows/deploy-backend.yml`)
+1. In the Render dashboard: **New → Blueprint**, connect this GitHub repo. Render
+   reads `render.yaml` and shows a plan: one web service (`enochlabs-backend`, built
+   from `backend/Dockerfile`) and one database (`enochlabs-db`).
+2. Click **Apply**. Render provisions the Postgres instance, builds the backend image,
+   sets `DATABASE_URL` on the web service automatically (via `fromDatabase` in
+   `render.yaml`), and runs `alembic upgrade head` as a **pre-deploy** step before the
+   new version starts serving traffic.
+3. Once the first deploy finishes, set the two `sync: false` variables in the
+   Render dashboard (Blueprint owners fill these in manually — they're
+   deployment-specific, not something to hardcode in the repo):
+   - `CORS_ORIGINS` → the deployed frontend's URL (see below), comma-separated if more
+     than one (e.g. `https://enochlabs.dev,https://www.enochlabs.dev`).
+   - `INQUIRY_NOTIFY_WEBHOOK` → optional; a webhook URL to notify on new inquiries.
+4. From here, **every push to `main` that touches `backend/` auto-deploys** — Render's
+   GitHub integration watches the repo directly. You do not need to run
+   `.github/workflows/deploy-backend.yml` for this path; it exists for non-Render
+   hosts (see below).
+5. Grab the deployed service's URL from the Render dashboard (e.g.
+   `https://enochlabs-backend.onrender.com`) — you'll need it for the frontend's
+   `VITE_API_URL` and for the smoke test below.
 
-Deploys `backend/` as a container (using the provided `Dockerfile`) on every push to
-`main` that touches `backend/`. Works with Render, Fly.io, Railway, or any
-container-accepting host. One-time setup:
+### Backend — any other container host
 
-1. Create a Postgres instance on your chosen provider (or use the host's managed
-   Postgres add-on) and note its connection string.
-2. Create a web service pointed at `backend/` with the `Dockerfile` build.
-3. Set the service's environment variables: `DATABASE_URL` (from step 1),
-   `CORS_ORIGINS` (the deployed frontend's URL), `INQUIRY_NOTIFY_WEBHOOK` (optional).
-4. Add whatever deploy-trigger secret your host requires as a GitHub Actions secret
-   (e.g. `RENDER_DEPLOY_HOOK_URL`, `FLY_API_TOKEN`) and reference it in
-   `deploy-backend.yml`.
-5. Run migrations against the new database once (`alembic upgrade head`, e.g. via a
-   one-off container command or a release-phase hook depending on the host).
-6. Push to `main` — the workflow builds and deploys automatically.
+If you're not using Render, `.github/workflows/deploy-backend.yml` builds and pushes a
+container image (from `backend/Dockerfile`) to GitHub Container Registry on every push
+to `main` that touches `backend/`, then optionally pings a deploy-trigger webhook —
+the pattern most hosts (Railway, Fly.io, a plain VPS with a webhook listener) support.
 
-The exact deploy step in `deploy-backend.yml` is written for a generic "build and push
-a container image" flow — swap in your host's specific action/CLI as needed; the CI
-gate stays the same regardless of target.
+1. Provision Postgres on your chosen host; note the connection string.
+2. Create a service that deploys from the pushed image
+   (`ghcr.io/<owner>/<repo>-backend:latest`), or configure it to build from
+   `backend/Dockerfile` directly.
+3. Set its environment variables from `backend/.env.example`: `DATABASE_URL`,
+   `CORS_ORIGINS`, `INQUIRY_NOTIFY_WEBHOOK` (optional).
+4. If your host supports a deploy webhook, add it as the repository secret
+   `DEPLOY_HOOK_URL`. If it needs a CLI instead (e.g. `flyctl deploy`), swap the
+   relevant step in `deploy-backend.yml` for that CLI's GitHub Action.
+5. Apply migrations as a controlled release step (see "Database migrations in
+   production" below) — never by hand against a live database outside of a deploy.
+
+### Frontend — Vercel, via the committed config (recommended)
+
+`frontend/vercel.json` is already configured for a Vite SPA: correct build command,
+output directory, and — importantly — a rewrite rule so client-side routes (e.g.
+`/services`, refreshed directly or shared as a link) don't 404 on the host.
+
+1. In the Vercel dashboard: **New Project**, import this repo, and set the project's
+   **Root Directory** to `frontend` (Vercel's monorepo support — this is a dashboard
+   setting, not something `vercel.json` controls).
+2. Set the frontend's runtime env vars in the Vercel project's **Environment
+   Variables** settings — these are baked in at build time for a Vite app, so they
+   must be set on the host, not just in a local `.env`:
+   - `VITE_API_URL` → the backend URL from the step above.
+   - `VITE_WHATSAPP_NUMBER`
+   - `VITE_SITE_URL` → the frontend's own final URL, once known.
+3. Deploy. Every push to `main` that touches `frontend/` redeploys automatically via
+   Vercel's own GitHub integration.
+4. Optionally, wire `.github/workflows/deploy-frontend.yml` instead/in addition if you
+   want the deploy driven from GitHub Actions rather than Vercel's native integration
+   — add the repository secrets `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`
+   (from running `vercel link` once inside `frontend/`). This workflow also runs the
+   smoke test below automatically against the freshly deployed URL.
+
+### Frontend — Netlify / Cloudflare Pages (alternative)
+
+`frontend/public/_redirects` provides the same SPA-fallback behavior as
+`vercel.json`'s rewrite rule, using the `_redirects` syntax both Netlify and
+Cloudflare Pages understand. Point either at `frontend/` as the base directory, with
+build command `npm run build` and publish directory `dist`.
+
+## Smoke-testing a deployment
+
+`scripts/smoke-test.sh` checks that a deployed frontend and/or backend are actually
+serving traffic, and can optionally submit a real test inquiry end-to-end:
+
+```bash
+./scripts/smoke-test.sh \
+  --frontend-url https://enochlabs.dev \
+  --backend-url https://enochlabs-backend.onrender.com \
+  --submit-test-inquiry
+```
+
+Or: `make smoke-test FRONTEND_URL=... BACKEND_URL=...`
+
+`deploy-frontend.yml` runs this automatically against the URL Vercel just deployed.
+`deploy-backend.yml` runs it automatically if the repository **variable** (not
+secret) `BACKEND_URL` is set — add it once under Settings → Secrets and variables →
+Actions → Variables.
 
 ## Database migrations in production
 
 Never run `alembic upgrade head` by hand against production outside of a controlled
-deploy step. The recommended flow: the backend's deploy step (or a release-phase hook,
-if the host supports one) runs migrations automatically before the new version starts
-serving traffic. Always review generated migrations in PRs before merge — see
-`docs/LLD.md` §5.
+deploy step. On the recommended Render path, this already happens automatically via
+`preDeployCommand` in `render.yaml` — migrations run before the new backend version
+starts serving traffic, on every deploy. On any other host, wire the equivalent
+release-phase/pre-deploy hook if it has one; otherwise, run migrations as an explicit,
+reviewed step immediately before the new version goes live. Always review generated
+migrations in PRs before merge — see `docs/LLD.md` §5.
 
 ## Custom domains
 
 Point each service's domain/subdomain at its host per that host's instructions (e.g.
-`enochlabs.dev` → frontend, `api.enochlabs.dev` → backend). Update
-`VITE_API_URL` and `CORS_ORIGINS` to match the final URLs.
+`enochlabs.dev` → frontend on Vercel, `api.enochlabs.dev` → backend on Render). Update
+`VITE_API_URL` and `CORS_ORIGINS` to match the final URLs once both are live.
