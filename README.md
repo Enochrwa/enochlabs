@@ -7,17 +7,20 @@
 Websites, business software, and ongoing technical support — built for shops,
 restaurants, hotels, salons, clinics, schools, startups, and the people who run them.
 
-[![CI](https://github.com/Enochrwa/enochlabs/actions/workflows/ci.yml/badge.svg)](https://github.com/Enochrwa/enochlabs/actions/workflows/ci.yml)
-[![Deploy](https://github.com/Enochrwa/enochlabs/actions/workflows/deploy.yml/badge.svg)](https://github.com/Enochrwa/enochlabs/actions/workflows/deploy.yml)
-![Next.js](https://img.shields.io/badge/Next.js-14-black?logo=next.js)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.5-3178C6?logo=typescript&logoColor=white)
+[![CI — Frontend](https://github.com/Enochrwa/enochlabs/actions/workflows/ci-frontend.yml/badge.svg)](https://github.com/Enochrwa/enochlabs/actions/workflows/ci-frontend.yml)
+[![CI — Backend](https://github.com/Enochrwa/enochlabs/actions/workflows/ci-backend.yml/badge.svg)](https://github.com/Enochrwa/enochlabs/actions/workflows/ci-backend.yml)
+![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178C6?logo=typescript&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)
 ![License](https://img.shields.io/badge/license-proprietary-lightgrey)
 
 [Business overview](docs/BUSINESS-OVERVIEW.md) ·
 [High-level design](docs/HLD.md) ·
 [Low-level design](docs/LLD.md) ·
 [Brand guidelines](docs/BRAND-GUIDELINES.md) ·
-[Roadmap](docs/ROADMAP.md)
+[Roadmap](docs/ROADMAP.md) ·
+[Sprint plan](docs/SPRINT-PLAN.md)
 
 </div>
 
@@ -37,20 +40,26 @@ Full detail in [`docs/BUSINESS-OVERVIEW.md`](docs/BUSINESS-OVERVIEW.md).
 
 ## What's in this repo
 
-The EnochLabs marketing site — the platform's own front door — built as a fast,
-accessible, server-rendered Next.js app. It's also the reference implementation of the
-design system future client and product work will build on.
+A monorepo with two independent, independently-deployed services:
 
-| | |
-| --- | --- |
-| **Framework** | Next.js 14 (App Router, TypeScript, React Server Components) |
-| **Styling** | Tailwind CSS with a token system in `tailwind.config.ts` |
-| **Content** | Typed content modules (`src/lib/content`) — no CMS overhead yet |
-| **CI** | GitHub Actions — format, lint, typecheck, build on every PR |
-| **CD** | GitHub Actions → Vercel, auto-deploy on `main` |
+```
+enochlabs/
+├── frontend/    React + TypeScript + Vite marketing site
+├── backend/     FastAPI + PostgreSQL API
+├── docs/        Business overview, HLD, LLD, brand, roadmap, sprint plan, deployment
+└── docker-compose.yml   Local dev: postgres + backend + frontend together
+```
+
+| | Frontend | Backend |
+| --- | --- | --- |
+| **Stack** | React 18, TypeScript, Vite, React Router | FastAPI, SQLAlchemy 2.0, Alembic |
+| **Styling** | Tailwind CSS (token system) + Radix UI primitives | — |
+| **Data** | Typed content modules (`src/content`) — no CMS yet | PostgreSQL |
+| **CI** | `.github/workflows/ci-frontend.yml` | `.github/workflows/ci-backend.yml` |
+| **CD** | `deploy-frontend.yml` → static host (Vercel etc.) | `deploy-backend.yml` → container host |
 
 Architecture in depth: [`docs/HLD.md`](docs/HLD.md) (system-level) and
-[`docs/LLD.md`](docs/LLD.md) (routes, components, data model).
+[`docs/LLD.md`](docs/LLD.md) (routes, components, data model, both services).
 
 ## Design direction
 
@@ -62,26 +71,42 @@ and type system in [`docs/BRAND-GUIDELINES.md`](docs/BRAND-GUIDELINES.md).
 
 ## Getting started
 
+Everything together, via Docker:
+
 ```bash
 git clone https://github.com/Enochrwa/enochlabs.git
 cd enochlabs
-cp .env.example .env
-npm install
-npm run dev
+cp backend/.env.example backend/.env
+docker compose up --build
 ```
 
-Then open [http://localhost:3000](http://localhost:3000).
+Frontend: [http://localhost:5173](http://localhost:5173) · Backend + API docs:
+[http://localhost:8000/docs](http://localhost:8000/docs).
+
+Or run each side natively — see [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
 
 ## Scripts
+
+**Frontend** (from `frontend/`):
 
 | Command | Purpose |
 | --- | --- |
 | `npm run dev` | Start the local dev server |
 | `npm run build` | Production build |
-| `npm run start` | Serve the production build |
 | `npm run lint` / `lint:fix` | ESLint |
 | `npm run format` / `format:check` | Prettier |
-| `npm run typecheck` | `tsc --noEmit` |
+| `npm run typecheck` | `tsc -b --noEmit` |
+
+**Backend** (from `backend/`, with `requirements-dev.txt` installed):
+
+| Command | Purpose |
+| --- | --- |
+| `uvicorn app.main:app --reload` | Start the local dev server |
+| `ruff check .` | Lint |
+| `mypy app` | Typecheck |
+| `pytest` | Run tests |
+| `alembic revision --autogenerate -m "..."` | Create a migration |
+| `alembic upgrade head` | Apply migrations |
 
 ## Contributing
 
@@ -89,13 +114,14 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for setup, branching, and PR expectatio
 
 ## Deployment
 
-See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for CI/CD and hosting setup.
+See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for CI/CD and hosting setup for both
+services.
 
-## Roadmap
+## Planning
 
-Phase 1 (this repo) → paying service clients → a client workspace → the first SaaS
-product built from the most-requested recurring solution. Detail in
-[`docs/ROADMAP.md`](docs/ROADMAP.md).
+Phase-level plan in [`docs/ROADMAP.md`](docs/ROADMAP.md); a concrete, sprint-by-sprint
+breakdown with a Definition of Done for each step in
+[`docs/SPRINT-PLAN.md`](docs/SPRINT-PLAN.md).
 
 ## License
 

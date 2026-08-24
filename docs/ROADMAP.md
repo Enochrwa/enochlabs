@@ -4,6 +4,9 @@ Sequencing follows the business's own long-term vision: individual developer →
 services business → software development company → SaaS/product company (see
 `docs/BUSINESS-OVERVIEW.md`).
 
+This is the phase-level view. For a sprint-by-sprint breakdown with concrete tasks and
+a Definition of Done for each, see [`docs/SPRINT-PLAN.md`](./SPRINT-PLAN.md).
+
 ## Phase 1 — Launch the marketing site (current)
 
 - [x] Repo initialized: structure, tooling, CI/CD, docs.
