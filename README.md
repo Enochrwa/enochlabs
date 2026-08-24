@@ -77,15 +77,20 @@ Everything together, via Docker:
 git clone https://github.com/Enochrwa/enochlabs.git
 cd enochlabs
 cp backend/.env.example backend/.env
-docker compose up --build
+docker compose up --build   # or: make dev
 ```
 
 Frontend: [http://localhost:5173](http://localhost:5173) · Backend + API docs:
 [http://localhost:8000/docs](http://localhost:8000/docs).
 
-Or run each side natively — see [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
+Or run each side natively — see [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) and the
+[`Makefile`](Makefile) targets below.
 
 ## Scripts
+
+A root [`Makefile`](Makefile) wraps the common commands for both services —
+`make dev`, `make frontend-lint`, `make backend-test`, `make migrate`,
+`make smoke-test FRONTEND_URL=... BACKEND_URL=...`, etc. Or run them directly:
 
 **Frontend** (from `frontend/`):
 
@@ -107,6 +112,10 @@ Or run each side natively — see [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
 | `pytest` | Run tests |
 | `alembic revision --autogenerate -m "..."` | Create a migration |
 | `alembic upgrade head` | Apply migrations |
+
+**Deployment:** [`scripts/smoke-test.sh`](scripts/smoke-test.sh) verifies a deployed
+frontend/backend are live and can optionally submit a real end-to-end test inquiry —
+see [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
 
 ## Contributing
 

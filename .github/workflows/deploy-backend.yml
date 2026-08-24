@@ -45,15 +45,33 @@ jobs:
         if: ${{ secrets.DEPLOY_HOOK_URL != '' }}
         run: curl -fsSL -X POST "${{ secrets.DEPLOY_HOOK_URL }}"
 
-# This workflow builds and pushes a container image to GHCR on every backend
-# change, then (optionally) pings a deploy-hook URL — the pattern most hosts
-# (Render, Railway, Fly.io) support for "redeploy on new image/webhook".
+      - name: Smoke test
+        if: ${{ vars.BACKEND_URL != '' }}
+        run: |
+          sleep 20 # give the host a moment to finish rolling out
+          ./scripts/smoke-test.sh --backend-url "${{ vars.BACKEND_URL }}"
+
+# ── Which path applies to you? ──────────────────────────────────────────────
 #
-# Required repository secret:
-#   DEPLOY_HOOK_URL — your host's deploy-trigger webhook. If your host instead
-#   pulls directly from GHCR, this step is unnecessary; if it needs a CLI
-#   (e.g. `flyctl deploy`), swap this step for that CLI's GitHub Action.
+# Using Render via render.yaml (the recommended path — see docs/DEPLOYMENT.md):
+#   You don't need this workflow at all. Render's GitHub integration watches
+#   this repo directly and redeploys automatically on every push to `main`
+#   that touches backend/, running `alembic upgrade head` as a pre-deploy step
+#   (see render.yaml). This workflow is for any OTHER container host.
 #
-# Database migrations are NOT run here automatically — apply them as a
-# controlled release-phase step per your host's mechanism (see
-# docs/DEPLOYMENT.md, "Database migrations in production").
+# Using another host (Railway, Fly.io, a VPS, ...):
+#   This workflow builds and pushes a container image to GHCR on every backend
+#   change, then (optionally) pings a deploy-hook URL — the pattern most hosts
+#   support for "redeploy on new image/webhook".
+#
+#   Required repository secret:
+#     DEPLOY_HOOK_URL — your host's deploy-trigger webhook. If your host
+#     instead pulls directly from GHCR, this step is unnecessary; if it needs
+#     a CLI (e.g. `flyctl deploy`), swap this step for that CLI's Action.
+#
+#   Database migrations are NOT run here automatically — apply them as a
+#   controlled release-phase step per your host's mechanism (see
+#   docs/DEPLOYMENT.md, "Database migrations in production").
+#
+# Either path: set the repository VARIABLE (not secret) `BACKEND_URL` to your
+# deployed backend's base URL to enable the post-deploy smoke test above.

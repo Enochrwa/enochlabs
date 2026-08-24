@@ -44,6 +44,9 @@ jobs:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
+      - name: Smoke test
+        run: ../scripts/smoke-test.sh --frontend-url "${{ steps.deploy.outputs.url }}"
+
 # Required repository secrets (scoped to a project linked at frontend/ — run
 # `vercel link` inside frontend/ once to generate them):
 #   VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID

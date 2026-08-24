@@ -52,19 +52,39 @@ sprint.
 
 **Goal:** every PR is gated by CI, and both services are live on the public internet.
 
-- [ ] Split CI into `ci-frontend.yml` / `ci-backend.yml`, path-scoped.
-- [ ] `deploy-frontend.yml`: static build → Vercel/Netlify/Cloudflare Pages.
-- [ ] `deploy-backend.yml`: container build → Render/Fly.io/Railway (or a VPS).
-- [ ] Provision production Postgres; run `alembic upgrade head` against it.
-- [ ] Wire `VITE_API_URL`, `CORS_ORIGINS`, `VITE_WHATSAPP_NUMBER` for production.
-- [ ] Point a real domain at the frontend (and a subdomain, e.g. `api.`, at the
-      backend).
-- [ ] Smoke test: submit the live contact form, confirm the row lands in production
-      Postgres.
+- [x] Split CI into `ci-frontend.yml` / `ci-backend.yml`, path-scoped.
+- [x] `deploy-frontend.yml`: static build → Vercel, with an automatic post-deploy
+      smoke test. `frontend/vercel.json` adds the SPA rewrite rule client-side routing
+      needs (without it, refreshing `/services` in production 404s);
+      `frontend/public/_redirects` gives Netlify/Cloudflare Pages the same fallback.
+- [x] `deploy-backend.yml`: container build → GHCR + generic deploy-hook, for any
+      non-Render host.
+- [x] `render.yaml` — a Render Blueprint that provisions the backend web service
+      **and** a managed Postgres instance together as infrastructure-as-code, with
+      `DATABASE_URL` wired automatically and `alembic upgrade head` running as a
+      pre-deploy step on every deploy. This is the recommended path (see
+      `docs/DEPLOYMENT.md`) and covers "provision production Postgres" and "run
+      migrations" without any manual dashboard clicking beyond connecting the repo.
+- [x] `CORS_ORIGINS` reworked to accept a plain comma-separated string (was
+      JSON-only), so it pastes cleanly into a hosting dashboard as one line.
+- [x] `scripts/smoke-test.sh` (+ `make smoke-test`) — checks a deployed
+      frontend/backend are serving traffic, and can optionally submit a real test
+      inquiry end-to-end. Wired into both deploy workflows.
+- [x] Root `Makefile` added for common dev/CI tasks across both services.
+- [ ] **Requires your own accounts/credentials — not something I can do from here:**
+      actually connect a Render account (Blueprint apply) and a Vercel account to this
+      repo, set the `sync: false` env vars (`CORS_ORIGINS`, `INQUIRY_NOTIFY_WEBHOOK`)
+      and Vercel env vars (`VITE_API_URL`, `VITE_WHATSAPP_NUMBER`) in each dashboard,
+      and point a real domain at the frontend (and a subdomain, e.g. `api.`, at the
+      backend). Exact steps for all of this are in `docs/DEPLOYMENT.md`.
+- [ ] Smoke test against the real production URLs once live (the tooling is ready;
+      running it against a live deployment is the last step above).
 
 **Definition of Done:** `enochlabs.dev` (or chosen domain) is live, the contact form
 write path works end-to-end in production, and a push to `main` in either `frontend/`
-or `backend/` auto-deploys just that service.
+or `backend/` auto-deploys just that service. All CI/CD/IaC tooling for this is now
+committed; what remains is account-level setup only you can perform (see checklist
+above and `docs/DEPLOYMENT.md`).
 
 ### Sprint 2 — Content & credibility
 
