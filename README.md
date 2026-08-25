@@ -21,7 +21,8 @@ restaurants, hotels, salons, clinics, schools, startups, and the people who run 
 [Brand guidelines](docs/BRAND-GUIDELINES.md) ·
 [Roadmap](docs/ROADMAP.md) ·
 [Sprint plan](docs/SPRINT-PLAN.md) ·
-[Mobile QA](docs/QA-MOBILE.md)
+[Mobile QA](docs/QA-MOBILE.md) ·
+[Accessibility & Lighthouse](docs/ACCESSIBILITY-KEYBOARD-LIGHTHOUSE.md)
 
 </div>
 
@@ -102,6 +103,7 @@ A root [`Makefile`](Makefile) wraps the common commands for both services —
 | `npm run lint` / `lint:fix` | ESLint |
 | `npm run format` / `format:check` | Prettier |
 | `npm run typecheck` | `tsc -b --noEmit` |
+| `npm run lighthouse` | Lighthouse CI against the home page (needs a local Chrome install; runs in CI automatically) |
 
 **Backend** (from `backend/`, with `requirements-dev.txt` installed):
 

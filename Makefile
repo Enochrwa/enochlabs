@@ -1,8 +1,8 @@
 # Convenience targets for local development. See docs/DEPLOYMENT.md for full detail.
 
 .PHONY: dev dev-down frontend-install frontend-dev frontend-lint frontend-typecheck \
-        frontend-build backend-install backend-dev backend-lint backend-typecheck \
-        backend-test migrate smoke-test
+        frontend-build frontend-lighthouse backend-install backend-dev backend-lint \
+        backend-typecheck backend-test migrate smoke-test
 
 ## Full stack via Docker (postgres + backend + frontend)
 dev:
@@ -26,6 +26,9 @@ frontend-typecheck:
 
 frontend-build:
 	cd frontend && npm run build
+
+frontend-lighthouse:
+	cd frontend && npm run build && npm run lighthouse
 
 ## Backend
 backend-install:

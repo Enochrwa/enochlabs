@@ -14,7 +14,7 @@ a Definition of Done for each, see [`docs/SPRINT-PLAN.md`](./SPRINT-PLAN.md).
 - [ ] Real portfolio content (even 1–2 seed projects/case studies).
 - [ ] Contact flow wired to a real email/relay provider + WhatsApp fallback.
 - [ ] Deployed to production domain; `deploy.yml` secrets configured.
-- [ ] Analytics in place (privacy-friendly — e.g. Plausible).
+- [x] Analytics in place (privacy-friendly — e.g. Plausible).
 
 **Exit criterion:** a stranger can land on the site, understand what EnochLabs does in
 under 10 seconds, and reach Enoch through WhatsApp or the contact form.

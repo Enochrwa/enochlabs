@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { trackEvent } from "@/lib/analytics";
 
 type Status = "idle" | "sending" | "sent" | "error";
 
@@ -38,6 +39,7 @@ export function ContactForm() {
       }
 
       setStatus("sent");
+      trackEvent("Contact Form Submit");
       event.currentTarget.reset();
     } catch (error) {
       setStatus("error");
@@ -146,6 +148,7 @@ export function ContactForm() {
               href={`https://wa.me/${whatsappNumber}`}
               target="_blank"
               rel="noreferrer"
+              onClick={() => trackEvent("WhatsApp Click", { location: "contact-form-fallback" })}
               className="mt-2 inline-block font-semibold text-seal underline"
             >
               Message us on WhatsApp instead

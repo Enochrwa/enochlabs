@@ -47,8 +47,15 @@ make frontend-dev
 
 ## CI
 
-- **`.github/workflows/ci-frontend.yml`** — runs on changes under `frontend/`:
-  install → `format:check` → `lint` → `typecheck` → `build`.
+- **`.github/workflows/ci-frontend.yml`** — runs on changes under `frontend/`: a
+  `quality` job (install → `format:check` → `lint` → `typecheck` → `build`) followed
+  by a `lighthouse` job that builds the site, serves it with `vite preview`, and runs
+  Lighthouse CI (`frontend/lighthouserc.json`) against the home page three times,
+  failing the build if performance, accessibility, or best-practices drops below 90
+  (`docs/SPRINT-PLAN.md` Sprint 4). GitHub's `ubuntu-latest` runners ship Chrome
+  preinstalled, so this needs no extra setup in CI; to run it locally you need a real
+  Chrome/Chromium binary on your machine (`npm run lighthouse` from `frontend/`, or
+  `make frontend-lighthouse`).
 - **`.github/workflows/ci-backend.yml`** — runs on changes under `backend/`: a
   `quality` job (install → `ruff check` → `mypy` → `pytest`) and a `build` job that
   builds `backend/Dockerfile` (via Buildx, not pushed anywhere) so a broken image
@@ -135,6 +142,9 @@ output directory, and — importantly — a rewrite rule so client-side routes (
      `https://enochlabs.dev` if unset, so the build never fails without it — but set
      it to the real domain once one is live, or social previews and the sitemap will
      point at the wrong place.
+   - `VITE_PLAUSIBLE_DOMAIN` → optional; see "Configuring analytics" below. Leave
+     unset and analytics stays fully disabled (no script loads, no network calls) —
+     safe default for local dev and preview deploys.
 3. Deploy. Every push to `main` that touches `frontend/` redeploys automatically via
    Vercel's own GitHub integration.
 4. Optionally, wire `.github/workflows/deploy-frontend.yml` instead/in addition if you
@@ -200,6 +210,28 @@ watches:
 Whichever target is used, this is the last piece of Sprint 3's "Enoch never misses an
 inquiry" goal (`docs/SPRINT-PLAN.md`) — the other two (rate limiting and the admin
 view) work without any account setup at all.
+
+## Configuring analytics
+
+`VITE_PLAUSIBLE_DOMAIN` turns on privacy-friendly, cookieless analytics via
+[Plausible](https://plausible.io) (`docs/SPRINT-PLAN.md` Sprint 4, `docs/ROADMAP.md`
+Phase 1). Unset — the default in `.env.example` and every preview deploy — it's a
+complete no-op: no script loads, no request ever leaves the browser
+(`frontend/src/lib/analytics.ts`).
+
+1. Create a site in your Plausible account (self-hosted or plausible.io) for the
+   domain you're deploying to.
+2. Set `VITE_PLAUSIBLE_DOMAIN` to that exact domain (e.g. `enochlabs.dev`) as a
+   Vercel/Netlify build-time env var — same caveat as the others above, this is baked
+   in at build time.
+3. Because the frontend is a client-rendered SPA, the script loads in "manual" mode
+   (`script.manual.js`) rather than Plausible's default auto-tracking script — the app
+   fires pageviews itself on every route change (`src/components/analytics.tsx`), so
+   navigating to `/services` or `/pricing` without a full page reload is still
+   counted. Three custom events are also tracked as goals, set these up under the
+   Plausible site's **Goals** if you want them broken out individually: `Contact Form
+   Submit`, `WhatsApp Click` (with a `location` prop —
+   `floating-button`/`contact-page`/`contact-form-fallback`), and `Pricing Page View`.
 
 ## Reviewing inquiries without `psql`
 

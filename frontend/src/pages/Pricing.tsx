@@ -1,13 +1,23 @@
+import { useEffect } from "react";
 import { SectionHeading } from "@/components/section-heading";
 import { PricingCard } from "@/components/pricing-card";
 import { pricing } from "@/content/pricing";
 import { useDocumentTitle } from "@/lib/use-document-title";
+import { trackEvent } from "@/lib/analytics";
 
 export function Pricing() {
   useDocumentTitle(
     "Pricing",
     "Straightforward starting prices for websites, business software, and maintenance retainers.",
   );
+
+  // Tracked as its own custom goal (docs/SPRINT-PLAN.md Sprint 4), separate
+  // from the automatic pageview `Analytics` fires on every route — pricing
+  // views are the funnel step worth watching as a distinct signal (how many
+  // visitors reach pricing vs. how many of those go on to contact).
+  useEffect(() => {
+    trackEvent("Pricing Page View");
+  }, []);
 
   return (
     <section className="mx-auto max-w-content px-6 py-20">

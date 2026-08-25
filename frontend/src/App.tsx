@@ -3,6 +3,7 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { WhatsAppButton } from "@/components/whatsapp-button";
 import { ScrollToTop } from "@/components/scroll-to-top";
+import { Analytics } from "@/components/analytics";
 import { Home } from "@/pages/Home";
 import { Services } from "@/pages/Services";
 import { Work } from "@/pages/Work";
@@ -16,8 +17,12 @@ export default function App() {
   return (
     <>
       <ScrollToTop />
+      <Analytics />
+      <a href="#main-content" className="skip-link">
+        Skip to content
+      </a>
       <SiteHeader />
-      <main>
+      <main id="main-content">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/services" element={<Services />} />

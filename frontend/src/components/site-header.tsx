@@ -17,6 +17,18 @@ export function SiteHeader() {
     setMenuOpen(false);
   }, [location.pathname]);
 
+  // Let keyboard users dismiss the open mobile nav with Escape, same as a
+  // native <dialog> or disclosure widget would (docs/SPRINT-PLAN.md Sprint 4
+  // keyboard-navigation pass).
+  useEffect(() => {
+    if (!menuOpen) return;
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setMenuOpen(false);
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [menuOpen]);
+
   return (
     <header className="relative border-b border-rule/60">
       <div className="mx-auto flex max-w-content items-center justify-between px-6 py-5">

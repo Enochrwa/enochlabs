@@ -97,7 +97,11 @@ export function Admin() {
           Kept only for this browser tab — cleared when you lock or close it.
         </p>
         <form onSubmit={handleUnlock} className="mt-6 space-y-4">
+          <label htmlFor="admin-key" className="sr-only">
+            X-Admin-Key value
+          </label>
           <input
+            id="admin-key"
             type="password"
             value={keyInput}
             onChange={(event) => setKeyInput(event.target.value)}
