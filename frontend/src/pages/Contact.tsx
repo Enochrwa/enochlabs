@@ -1,6 +1,7 @@
 import { SectionHeading } from "@/components/section-heading";
 import { ContactForm } from "@/components/contact-form";
 import { useDocumentTitle } from "@/lib/use-document-title";
+import { trackEvent } from "@/lib/analytics";
 
 const whatsappNumber = import.meta.env.VITE_WHATSAPP_NUMBER as string | undefined;
 
@@ -31,6 +32,7 @@ export function Contact() {
                 href={`https://wa.me/${whatsappNumber}`}
                 target="_blank"
                 rel="noreferrer"
+                onClick={() => trackEvent("WhatsApp Click", { location: "contact-page" })}
                 className="mt-2 inline-block font-body text-ledger-light underline"
               >
                 Message us directly
