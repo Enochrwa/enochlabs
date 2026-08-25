@@ -9,6 +9,7 @@ import { Work } from "@/pages/Work";
 import { Pricing } from "@/pages/Pricing";
 import { About } from "@/pages/About";
 import { Contact } from "@/pages/Contact";
+import { Admin } from "@/pages/Admin";
 import { NotFound } from "@/pages/NotFound";
 
 export default function App() {
@@ -24,6 +25,9 @@ export default function App() {
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
+          {/* Internal-only — not linked from SiteHeader/SiteFooter or the
+              sitemap. See docs/SPRINT-PLAN.md Sprint 3 and src/pages/Admin.tsx. */}
+          <Route path="/admin" element={<Admin />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
