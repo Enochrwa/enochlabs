@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" role="img" aria-labelledby="hr-title">
+  <title id="hr-title">HandyRwanda interface preview — artisan job dashboard</title>
+  <defs>
+    <linearGradient id="hr-bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1B1F29" />
+      <stop offset="1" stop-color="#12151C" />
+    </linearGradient>
+  </defs>
+  <rect width="800" height="500" fill="url(#hr-bg)" />
+
+  <!-- window chrome -->
+  <rect x="0" y="0" width="800" height="44" fill="#1B1F29" />
+  <circle cx="24" cy="22" r="6" fill="#3A4256" />
+  <circle cx="46" cy="22" r="6" fill="#3A4256" />
+  <circle cx="68" cy="22" r="6" fill="#3A4256" />
+  <rect x="320" y="12" width="160" height="20" rx="4" fill="#12151C" />
+  <text x="400" y="26" font-family="IBM Plex Mono, monospace" font-size="11" fill="#5C6478" text-anchor="middle">handyrwanda.app</text>
+
+  <!-- sidebar -->
+  <rect x="0" y="44" width="180" height="456" fill="#161A23" />
+  <text x="28" y="88" font-family="Fraunces, serif" font-size="20" font-weight="600" fill="#F3F0E8">Handy<tspan fill="#E8B34C">Rwanda</tspan></text>
+  <rect x="28" y="120" width="124" height="28" rx="3" fill="#E8B34C" fill-opacity="0.12" />
+  <text x="40" y="138" font-family="Inter, sans-serif" font-size="12" fill="#E8B34C">Job requests</text>
+  <text x="40" y="182" font-family="Inter, sans-serif" font-size="12" fill="#8A91A6">My profile</text>
+  <text x="40" y="222" font-family="Inter, sans-serif" font-size="12" fill="#8A91A6">Messages</text>
+  <text x="40" y="262" font-family="Inter, sans-serif" font-size="12" fill="#8A91A6">Portfolio</text>
+
+  <!-- header row -->
+  <text x="210" y="90" font-family="Fraunces, serif" font-size="22" font-weight="500" fill="#F3F0E8">Job requests</text>
+  <text x="210" y="112" font-family="Inter, sans-serif" font-size="12" fill="#8A91A6">3 new since you last checked</text>
+
+  <!-- stat chips -->
+  <g font-family="IBM Plex Mono, monospace">
+    <rect x="210" y="130" width="150" height="60" fill="none" stroke="#3A4256" />
+    <text x="222" y="152" font-size="10" letter-spacing="1" fill="#5C6478">OPEN JOBS</text>
+    <text x="222" y="176" font-size="20" fill="#2F8F7B">12</text>
+
+    <rect x="368" y="130" width="150" height="60" fill="none" stroke="#3A4256" />
+    <text x="380" y="152" font-size="10" letter-spacing="1" fill="#5C6478">IN PROGRESS</text>
+    <text x="380" y="176" font-size="20" fill="#E8B34C">5</text>
+
+    <rect x="526" y="130" width="150" height="60" fill="none" stroke="#3A4256" />
+    <text x="538" y="152" font-size="10" letter-spacing="1" fill="#5C6478">COMPLETED</text>
+    <text x="538" y="176" font-size="20" fill="#F3F0E8">47</text>
+  </g>
+
+  <!-- job list -->
+  <g font-family="Inter, sans-serif">
+    <line x1="210" y1="210" x2="676" y2="210" stroke="#3A4256" />
+    <text x="210" y="234" font-size="13" fill="#F3F0E8">Custom welded gate — Kicukiro</text>
+    <text x="640" y="234" font-size="11" fill="#2F8F7B" text-anchor="end">New</text>
+
+    <line x1="210" y1="252" x2="676" y2="252" stroke="#3A4256" />
+    <text x="210" y="276" font-size="13" fill="#F3F0E8">Wooden furniture set — Nyamirambo</text>
+    <text x="655" y="276" font-size="11" fill="#E8B34C" text-anchor="end">In progress</text>
+
+    <line x1="210" y1="294" x2="676" y2="294" stroke="#3A4256" />
+    <text x="210" y="318" font-size="13" fill="#F3F0E8">Tailoring — school uniforms (40 units)</text>
+    <text x="655" y="318" font-size="11" fill="#E8B34C" text-anchor="end">In progress</text>
+
+    <line x1="210" y1="336" x2="676" y2="336" stroke="#3A4256" />
+    <text x="210" y="360" font-size="13" fill="#F3F0E8">Leather repair — three bags</text>
+    <text x="640" y="360" font-size="11" fill="#8A91A6" text-anchor="end">Done</text>
+
+    <line x1="210" y1="378" x2="676" y2="378" stroke="#3A4256" />
+  </g>
+</svg>
