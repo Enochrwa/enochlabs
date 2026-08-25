@@ -124,22 +124,41 @@ whole site comfortably, and at least one real project is showcased. Met, with th
 physical-device spot-check in `docs/QA-MOBILE.md` carried forward as a fast manual
 follow-up rather than blocking the sprint.
 
-### Sprint 3 — Inquiry reliability & notifications
+### Sprint 3 — Inquiry reliability & notifications ✅
 
 **Goal:** Enoch never misses an inquiry.
 
-- [ ] Configure `INQUIRY_NOTIFY_WEBHOOK` against a real channel (email relay or
-      Slack/Telegram webhook) so new inquiries page Enoch immediately.
-- [ ] Add basic rate-limiting/spam protection to `POST /api/v1/inquiries` (e.g. a
+- [x] Configure `INQUIRY_NOTIFY_WEBHOOK` against a real channel (email relay or
+      Slack/Telegram webhook) so new inquiries page Enoch immediately. Implemented as
+      `INQUIRY_NOTIFY_WEBHOOK` + `INQUIRY_NOTIFY_WEBHOOK_FORMAT` (`generic` | `slack` |
+      `discord`), so the same webhook config works against an email-relay/Zapier hook
+      or a Slack/Discord channel webhook without code changes — see
+      `docs/DEPLOYMENT.md` "Configuring inquiry notifications". Actually pointing it at
+      a live channel is an account-level step only Enoch can do (same caveat as Sprint
+      1's hosting setup): the tooling is committed and tested, a real webhook URL isn't.
+- [x] Add basic rate-limiting/spam protection to `POST /api/v1/inquiries` (e.g. a
       honeypot field + simple IP throttling) — cheap, no CAPTCHA dependency yet.
-- [ ] Add a minimal admin-only `GET /api/v1/inquiries` (list) endpoint, protected by a
-      simple shared-secret header for now (full auth arrives in Phase 3).
-- [ ] Build a tiny internal-only view (could be a single authenticated page, or even a
+      Implemented both: a hidden `hp_website` honeypot field on the contact form
+      (`app/schemas/inquiry.py`, `ContactForm`) that silently drops spam without
+      tipping the bot off, and a per-IP sliding-window rate limiter
+      (`app/services/rate_limit.py`) applied to the endpoint.
+- [x] Add a minimal admin-only `GET /api/v1/inquiries` (list) endpoint, protected by a
+      simple shared-secret header for now (full auth arrives in Phase 3). Implemented
+      as `X-Admin-Key` against `ADMIN_API_KEY` (`app/api/deps.py::require_admin`), with
+      status filtering and pagination.
+- [x] Build a tiny internal-only view (could be a single authenticated page, or even a
       protected API consumed via a REST client) to review inquiries without touching
-      the database directly.
+      the database directly. Implemented as `/admin` in the frontend
+      (`frontend/src/pages/Admin.tsx`) — prompts for the admin key, keeps it in
+      `sessionStorage` only, and renders a filterable, ledger-styled inquiry list.
+      Deliberately excluded from navigation, the sitemap, and search indexing
+      (`robots.txt` disallow + a `noindex` meta tag).
 
 **Definition of Done:** Enoch gets notified within minutes of a real inquiry, and can
-review all past inquiries without `psql`.
+review all past inquiries without `psql`. The review path (`/admin` + the listing
+endpoint) is fully done and tested; notification delivery is code-complete and tested
+against all three payload shapes, with wiring a real webhook URL carried forward as an
+account-level step (see above).
 
 ### Sprint 4 — Analytics & polish
 
