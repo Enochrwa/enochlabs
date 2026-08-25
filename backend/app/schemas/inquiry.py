@@ -14,6 +14,15 @@ class InquiryCreate(BaseModel):
     business: str | None = Field(default=None, max_length=200)
     contact: str = Field(min_length=1, max_length=200)
     problem: str = Field(min_length=1, max_length=5000)
+    hp_website: str | None = Field(
+        default=None,
+        max_length=200,
+        description=(
+            "Honeypot field. Must stay empty — it's hidden from real visitors via CSS "
+            "on the contact form. Any value here marks the submission as spam: the "
+            "response still looks like success, but nothing is persisted."
+        ),
+    )
 
 
 class InquiryRead(BaseModel):
@@ -28,3 +37,10 @@ class InquiryRead(BaseModel):
     problem: str
     status: InquiryStatus
     created_at: datetime
+
+
+class InquiryListResponse(BaseModel):
+    """Paginated response for the admin-only inquiry listing."""
+
+    items: list[InquiryRead]
+    total: int
