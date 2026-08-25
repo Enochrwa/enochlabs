@@ -20,6 +20,9 @@ export function ContactForm() {
       business: formData.get("business"),
       contact: formData.get("contact"),
       problem: formData.get("problem"),
+      // Honeypot — see the hidden field below and docs/LLD.md §6. Real
+      // visitors never see or fill this; anything here marks it as spam.
+      hp_website: formData.get("hp_website"),
     };
 
     try {
@@ -53,6 +56,17 @@ export function ContactForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Honeypot field — invisible and unreachable by tab order for real
+          visitors, but a plain <input> a simple bot will happily fill in.
+          See docs/LLD.md §6 and backend InquiryCreate.hp_website. */}
+      <div
+        aria-hidden="true"
+        className="absolute left-[-9999px] top-auto h-px w-px overflow-hidden"
+      >
+        <label htmlFor="hp_website">Leave this field blank</label>
+        <input id="hp_website" name="hp_website" type="text" tabIndex={-1} autoComplete="off" />
+      </div>
+
       <div>
         <label
           htmlFor="name"
