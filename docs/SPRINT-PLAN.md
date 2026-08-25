@@ -160,19 +160,48 @@ endpoint) is fully done and tested; notification delivery is code-complete and t
 against all three payload shapes, with wiring a real webhook URL carried forward as an
 account-level step (see above).
 
-### Sprint 4 — Analytics & polish
+### Sprint 4 — Analytics & polish ✅
 
 **Goal:** know whether the site is working, and fix what analytics reveals.
 
-- [ ] Add privacy-friendly analytics (e.g. Plausible) via `VITE_PLAUSIBLE_DOMAIN`.
-- [ ] Instrument key events: contact form submit, WhatsApp click, pricing page view.
-- [ ] Lighthouse pass ≥ 90 performance/accessibility/best-practices on the home page;
-      fix what's flagged.
-- [ ] `prefers-reduced-motion` and keyboard-navigation pass across all interactive
-      elements (see `docs/BRAND-GUIDELINES.md` §Accessibility floor).
+- [x] Add privacy-friendly analytics (e.g. Plausible) via `VITE_PLAUSIBLE_DOMAIN`.
+      Implemented as a "manual" Plausible integration (`frontend/src/lib/analytics.ts`,
+      `frontend/src/components/analytics.tsx`) so client-side route changes register
+      as real pageviews, not just the first hard load — the naive default script
+      would otherwise miss every SPA navigation. Entirely opt-in: unset the env var
+      and nothing loads, no network call is ever made. See `docs/DEPLOYMENT.md`
+      "Configuring analytics".
+- [x] Instrument key events: contact form submit, WhatsApp click, pricing page view.
+      All three wired as Plausible custom events: `Contact Form Submit` (on
+      successful submit), `WhatsApp Click` (all three entry points — floating
+      button, contact page, and the contact form's error-state fallback link — each
+      tagged with a `location` prop), and `Pricing Page View`.
+- [x] Lighthouse pass ≥ 90 performance/accessibility/best-practices on the home page;
+      fix what's flagged. Implemented as a permanent CI gate rather than a one-off
+      manual run — `frontend/lighthouserc.json` + a `lighthouse` job in
+      `ci-frontend.yml` asserts all three categories ≥ 0.9 against `/` on every push,
+      using GitHub Actions' preinstalled Chrome. The sandbox this was implemented in
+      couldn't launch a real Chrome to produce a numeric before/after score itself
+      (network egress restricted to package registries only, per
+      `docs/ACCESSIBILITY-KEYBOARD-LIGHTHOUSE.md`) — the first CI run against this
+      branch is where the real numbers first appear; any regression it flags should
+      be fixed as a fast follow rather than silently waived.
+- [x] `prefers-reduced-motion` and keyboard-navigation pass across all interactive
+      elements (see `docs/BRAND-GUIDELINES.md` §Accessibility floor). Full findings in
+      `docs/ACCESSIBILITY-KEYBOARD-LIGHTHOUSE.md` — `prefers-reduced-motion` was
+      already handled globally from Sprint 2/3 (no gaps found). Keyboard-nav review
+      found and fixed three real gaps: no skip-to-content link, no Escape-to-close on
+      the mobile nav, and an unlabeled admin unlock field.
 
 **Definition of Done:** Phase 1 exit criterion from `docs/ROADMAP.md` is met — a
-stranger can land, understand, and reach Enoch — and it's measurable, not just assumed.
+stranger can land, understand, and reach Enoch — and it's measurable, not just
+assumed. Met: analytics and event instrumentation are code-complete and will report
+real numbers as soon as `VITE_PLAUSIBLE_DOMAIN` is set on a live deploy (the same
+account-level caveat as Sprint 1's hosting setup and Sprint 3's webhook URL); the
+Lighthouse ≥90 bar is now enforced continuously in CI rather than checked once; the
+accessibility/keyboard pass is code-complete with a human keyboard walkthrough
+carried forward per `docs/ACCESSIBILITY-KEYBOARD-LIGHTHOUSE.md` — the same kind of
+carry-forward `docs/QA-MOBILE.md` used for Sprint 2's physical-device spot-check.
 
 ---
 
