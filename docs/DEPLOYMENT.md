@@ -49,8 +49,10 @@ make frontend-dev
 
 - **`.github/workflows/ci-frontend.yml`** — runs on changes under `frontend/`:
   install → `format:check` → `lint` → `typecheck` → `build`.
-- **`.github/workflows/ci-backend.yml`** — runs on changes under `backend/`: install →
-  `ruff check` → `mypy` → `pytest`.
+- **`.github/workflows/ci-backend.yml`** — runs on changes under `backend/`: a
+  `quality` job (install → `ruff check` → `mypy` → `pytest`) and a `build` job that
+  builds `backend/Dockerfile` (via Buildx, not pushed anywhere) so a broken image
+  fails the PR instead of the next deploy. Both run in parallel.
 
 Both must pass before a PR merges; scoping by path keeps feedback fast and avoids
 unrelated failures blocking unrelated changes.
@@ -76,7 +78,12 @@ in one step, and wires them together automatically.
    deployment-specific, not something to hardcode in the repo):
    - `CORS_ORIGINS` → the deployed frontend's URL (see below), comma-separated if more
      than one (e.g. `https://enochlabs.dev,https://www.enochlabs.dev`).
-   - `INQUIRY_NOTIFY_WEBHOOK` → optional; a webhook URL to notify on new inquiries.
+   - `INQUIRY_NOTIFY_WEBHOOK` → optional; a webhook URL to notify on new inquiries (see
+     "Configuring inquiry notifications" below).
+   - `ADMIN_API_KEY` → a long random secret; required to use the admin inquiry listing
+     (`GET /api/v1/inquiries`) and the frontend's `/admin` view. Generate one with e.g.
+     `openssl rand -hex 32`. Leave unset and the admin endpoint refuses every request
+     (`503`) rather than silently allowing access.
 4. From here, **every push to `main` that touches `backend/` auto-deploys** — Render's
    GitHub integration watches the repo directly. You do not need to run
    `.github/workflows/deploy-backend.yml` for this path; it exists for non-Render
@@ -97,7 +104,10 @@ the pattern most hosts (Railway, Fly.io, a plain VPS with a webhook listener) su
    (`ghcr.io/<owner>/<repo>-backend:latest`), or configure it to build from
    `backend/Dockerfile` directly.
 3. Set its environment variables from `backend/.env.example`: `DATABASE_URL`,
-   `CORS_ORIGINS`, `INQUIRY_NOTIFY_WEBHOOK` (optional).
+   `CORS_ORIGINS`, `INQUIRY_NOTIFY_WEBHOOK` + `INQUIRY_NOTIFY_WEBHOOK_FORMAT`
+   (optional), `INQUIRY_RATE_LIMIT_MAX` / `INQUIRY_RATE_LIMIT_WINDOW_SECONDS`
+   (optional — sensible defaults ship), `ADMIN_API_KEY` (required for the admin
+   inquiry listing).
 4. If your host supports a deploy webhook, add it as the repository secret
    `DEPLOY_HOOK_URL`. If it needs a CLI instead (e.g. `flyctl deploy`), swap the
    relevant step in `deploy-backend.yml` for that CLI's GitHub Action.
@@ -168,6 +178,38 @@ starts serving traffic, on every deploy. On any other host, wire the equivalent
 release-phase/pre-deploy hook if it has one; otherwise, run migrations as an explicit,
 reviewed step immediately before the new version goes live. Always review generated
 migrations in PRs before merge — see `docs/LLD.md` §5.
+
+## Configuring inquiry notifications
+
+`INQUIRY_NOTIFY_WEBHOOK` is a best-effort POST fired after each inquiry is durably
+saved (see `docs/LLD.md` §6) — it never blocks or fails the visitor's submission, even
+if the webhook is down or misconfigured. Point it at whichever channel Enoch actually
+watches:
+
+- **Email relay / Zapier / Make** — leave `INQUIRY_NOTIFY_WEBHOOK_FORMAT=generic` (the
+  default). The webhook receives the raw inquiry fields as JSON
+  (`name`, `business`, `contact`, `problem`) for the relay to template into an email.
+- **Slack** — create an
+  [incoming webhook](https://api.slack.com/messaging/webhooks) for the channel to
+  notify, set `INQUIRY_NOTIFY_WEBHOOK` to its URL, and set
+  `INQUIRY_NOTIFY_WEBHOOK_FORMAT=slack`. Slack expects `{"text": "..."}`, not arbitrary
+  JSON — the backend builds that shape for you.
+- **Discord** — same idea: a channel webhook URL plus
+  `INQUIRY_NOTIFY_WEBHOOK_FORMAT=discord`, which posts `{"content": "..."}`.
+
+Whichever target is used, this is the last piece of Sprint 3's "Enoch never misses an
+inquiry" goal (`docs/SPRINT-PLAN.md`) — the other two (rate limiting and the admin
+view) work without any account setup at all.
+
+## Reviewing inquiries without `psql`
+
+Two things gate `GET /api/v1/inquiries` and the frontend's `/admin` view: an
+`ADMIN_API_KEY` set on the backend, and entering that same value into the `/admin`
+page's unlock prompt (kept only in that browser tab's `sessionStorage`, never written
+to disk). Generate a strong key — `openssl rand -hex 32` works well — and set it as
+`ADMIN_API_KEY` wherever the backend runs (see the Render step above, or your
+`.env` for local development). This is an interim shared secret, not per-user login;
+Phase 3 (`docs/ROADMAP.md`) replaces it with real auth once the client portal exists.
 
 ## Custom domains
 

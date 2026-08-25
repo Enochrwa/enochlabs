@@ -16,14 +16,13 @@ concurrency:
   group: ci-backend-${{ github.ref }}
   cancel-in-progress: true
 
-defaults:
-  run:
-    working-directory: backend
-
 jobs:
   quality:
     name: Lint, typecheck & test
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -46,3 +45,26 @@ jobs:
 
       - name: Test (pytest, in-memory SQLite)
         run: pytest -v
+
+  build:
+    name: Build image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Validates backend/Dockerfile still builds on every change — the same
+      # image deploy-backend.yml pushes to production, built here without
+      # pushing anywhere, so a broken Dockerfile fails the PR instead of the
+      # next deploy. See docs/DEPLOYMENT.md.
+      - name: Build backend image (not pushed)
+        uses: docker/build-push-action@v6
+        with:
+          context: backend
+          push: false
+          tags: enochlabs-backend:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

@@ -50,6 +50,7 @@ enochlabs/
 | `/pricing` | `Pricing` | Starting packages per `docs/BUSINESS-OVERVIEW.md` §Revenue streams. |
 | `/about` | `About` | Founder story, the 6-step engagement flow. |
 | `/contact` | `Contact` | Contact form + WhatsApp deep link. |
+| `/admin` | `Admin` | Internal-only inquiry review, gated by a shared admin key. Not linked from navigation, the sitemap, or search indexing (see §5). |
 | `*` | `NotFound` | 404 page. |
 
 Shared chrome (`SiteHeader`, `SiteFooter`, `WhatsAppButton`, `ScrollToTop`) is mounted
@@ -69,7 +70,10 @@ of Next.js's old per-page `metadata` export.
 - `PortfolioCard` — one case study (problem, solution, outcome).
 - `WhatsAppButton` — persistent floating CTA using `VITE_WHATSAPP_NUMBER`.
 - `ContactForm` — posts to the backend's `POST /api/v1/inquiries`, with a WhatsApp
-  fallback shown inline if the request fails.
+  fallback shown inline if the request fails. Includes a hidden honeypot field for
+  spam protection (see §5).
+- `StatusBadge` — colored ledger-style label for an inquiry's status, shared between
+  the admin view and any future portal.
 - `ScrollToTop` — resets scroll position on route change (React Router doesn't do this
   automatically, unlike Next.js).
 
@@ -108,7 +112,8 @@ Editing content is a code change (PR + CI + preview deploy) — intentional at t
 | --- | --- | --- |
 | `/` | `GET` | Liveness/root info. |
 | `/api/v1/health` | `GET` | Health check (used by hosting platforms/monitoring). |
-| `/api/v1/inquiries` | `POST` | Create an inquiry from the contact form. `201` + the created record on success; `422` on validation failure. |
+| `/api/v1/inquiries` | `POST` | Create an inquiry from the contact form. `201` + the created record on success; `422` on validation failure; `429` if the calling IP has exceeded the rate limit (see §6). |
+| `/api/v1/inquiries` | `GET` | Admin-only: list stored inquiries, newest first, optionally filtered by `status_filter` and paginated via `skip`/`limit`. Requires the `X-Admin-Key` header (see §6). `401` if missing/wrong, `503` if `ADMIN_API_KEY` isn't set on this deployment. |
 
 Full request/response schemas are auto-documented at `/docs` (Swagger UI) and
 `/redoc` when the API is running.
@@ -145,29 +150,58 @@ initial migration. New tables/columns always go through
 `alembic revision --autogenerate -m "..."` (see `docs/DEPLOYMENT.md` for the workflow),
 never manual DDL against a live database.
 
+### Spam protection & admin access (Sprint 3)
+
+- **Honeypot** — `InquiryCreate.hp_website` is a hidden field the real `ContactForm`
+  never shows or fills (CSS-hidden, `tabIndex={-1}`, off the tab order). If a
+  submission arrives with it filled, `POST /inquiries` still returns `201` with a
+  plausible-looking body (so an unsophisticated bot doesn't learn to route around it)
+  but never writes to the database or fires the notify webhook.
+- **Rate limiting** — `app/services/rate_limit.py::InMemoryRateLimiter` throttles
+  `POST /inquiries` per client IP (`X-Forwarded-For`-aware) via a sliding window,
+  configured by `INQUIRY_RATE_LIMIT_MAX` / `INQUIRY_RATE_LIMIT_WINDOW_SECONDS`.
+  It's process-local — fine for a single backend instance at current traffic; move to
+  a shared store (e.g. Redis) if EnochLabs ever runs multiple instances.
+- **Admin listing** — `GET /inquiries` is gated by `app/api/deps.py::require_admin`,
+  which checks the `X-Admin-Key` header against `ADMIN_API_KEY`. This is an interim
+  shared secret, not real auth — Phase 3 (`docs/ROADMAP.md`) replaces it with per-user
+  login. The frontend's `/admin` route (`frontend/src/pages/Admin.tsx`) is the internal
+  view that consumes this endpoint; it's intentionally excluded from site navigation,
+  the sitemap, and search indexing (`robots.txt` disallows `/admin`, and the page sets
+  a `noindex` meta tag itself as a second layer).
+
 ## 6. Contact/inquiry flow (end-to-end)
 
 1. Visitor fills out `ContactForm` on `/contact` (name, business, contact method,
-   problem).
+   problem — plus a hidden honeypot field, see §5).
 2. The form `POST`s JSON to `${VITE_API_URL}/api/v1/inquiries`.
 3. FastAPI validates the payload against `InquiryCreate` (returns `422` with field
-   errors if invalid).
-4. `services/inquiries.py::create_inquiry` writes the row to Postgres, then — only if
-   `INQUIRY_NOTIFY_WEBHOOK` is configured — best-effort POSTs a notification (e.g. to an
-   email relay or Slack webhook). A webhook failure is logged, never surfaced to the
-   visitor, and never rolls back the already-saved inquiry.
+   errors if invalid) and checks the calling IP against the rate limiter (`429` if
+   exceeded — see §5).
+4. If the honeypot field is filled, the request short-circuits with a fake success and
+   nothing is persisted (§5). Otherwise, `services/inquiries.py::create_inquiry` writes
+   the row to Postgres, then — only if `INQUIRY_NOTIFY_WEBHOOK` is configured —
+   best-effort POSTs a notification shaped per `INQUIRY_NOTIFY_WEBHOOK_FORMAT` (e.g. to
+   an email relay, Slack, or Discord webhook). A webhook failure is logged, never
+   surfaced to the visitor, and never rolls back the already-saved inquiry.
 5. On success, the frontend shows a confirmation state. On any failure (network error,
    API down, `4xx`/`5xx`), the frontend surfaces the WhatsApp deep link
    (`https://wa.me/<VITE_WHATSAPP_NUMBER>`) as a guaranteed fallback.
+6. Enoch reviews stored inquiries at `/admin` (§5) instead of connecting to Postgres
+   directly.
 
 ## 7. Environment & config
 
 **Frontend** (`frontend/.env.example`): `VITE_API_URL` (backend base URL),
-`VITE_WHATSAPP_NUMBER`, `VITE_SITE_URL`, `VITE_PLAUSIBLE_DOMAIN` (optional).
+`VITE_WHATSAPP_NUMBER`, `VITE_SITE_URL`, `VITE_PLAUSIBLE_DOMAIN` (optional). The
+`/admin` view doesn't need its own env var — it prompts for the `X-Admin-Key` value at
+runtime and keeps it in `sessionStorage` only.
 
 **Backend** (`backend/.env.example`): `DATABASE_URL` (Postgres connection string),
 `CORS_ORIGINS` (frontend origins allowed to call the API), `INQUIRY_NOTIFY_WEBHOOK`
-(optional), `ENVIRONMENT`, `DEBUG`.
+(optional) + `INQUIRY_NOTIFY_WEBHOOK_FORMAT` (`generic` | `slack` | `discord`),
+`INQUIRY_RATE_LIMIT_MAX` / `INQUIRY_RATE_LIMIT_WINDOW_SECONDS`, `ADMIN_API_KEY`
+(required to use the admin listing endpoint/view), `ENVIRONMENT`, `DEBUG`.
 
 ## 8. Testing/quality gates
 
@@ -183,6 +217,8 @@ never manual DDL against a live database.
 - `pytest` — unit/integration tests against an in-memory SQLite DB (fast, no external
   dependency; Postgres-specific behavior is exercised via real migrations in CI/staging
   — see `docs/DEPLOYMENT.md`).
+- `docker build backend/` — validates `backend/Dockerfile` still builds (CI only, via
+  Buildx; not run as part of the local `pytest`/`ruff`/`mypy` loop).
 
 Both suites run in CI on every PR (`ci-frontend.yml`, `ci-backend.yml`), scoped by path
 so a frontend-only change doesn't trigger backend CI and vice versa.
