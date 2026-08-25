@@ -1,4 +1,8 @@
 from fastapi.testclient import TestClient
+from sqlalchemy import func, select
+from sqlalchemy.orm import Session
+
+from app.db.models.inquiry import Inquiry
 
 
 def test_submit_inquiry_success(client: TestClient) -> None:
@@ -41,3 +45,28 @@ def test_submit_inquiry_missing_required_field(client: TestClient) -> None:
     response = client.post("/api/v1/inquiries", json=payload)
 
     assert response.status_code == 422
+
+
+def test_submit_inquiry_honeypot_looks_successful_but_is_dropped(
+    client: TestClient, db_session: Session
+) -> None:
+    payload = {
+        "name": "Spambot",
+        "contact": "bot@example.com",
+        "problem": "Buy my product!",
+        "hp_website": "https://spam.example.com",
+    }
+
+    response = client.post("/api/v1/inquiries", json=payload)
+
+    # Looks like an ordinary success to whatever submitted it...
+    assert response.status_code == 201
+    data = response.json()
+    assert data["name"] == payload["name"]
+    assert data["status"] == "new"
+
+    # ...but nothing was actually written to the database.
+    count = db_session.execute(
+        select(func.count()).select_from(Inquiry).where(Inquiry.name == "Spambot")
+    ).scalar_one()
+    assert count == 0

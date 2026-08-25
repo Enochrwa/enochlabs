@@ -32,6 +32,25 @@ class Settings(BaseSettings):
     # Outbound notification for new inquiries (optional — e.g. an email relay webhook)
     inquiry_notify_webhook: str | None = None
 
+    # Shape of the payload posted to inquiry_notify_webhook:
+    #   "generic" — raw JSON of the inquiry fields (e.g. for an email-relay/Zapier hook)
+    #   "slack"   — {"text": "..."} , the shape Slack/Mattermost incoming webhooks expect
+    #   "discord" — {"content": "..."}, the shape a Discord webhook expects
+    # See docs/DEPLOYMENT.md "Configuring inquiry notifications".
+    inquiry_notify_webhook_format: str = "generic"
+
+    # Rate limiting for POST /api/v1/inquiries, per client IP (see
+    # app/services/rate_limit.py). Cheap spam protection without a CAPTCHA
+    # dependency — see docs/SPRINT-PLAN.md Sprint 3.
+    inquiry_rate_limit_max: int = 20
+    inquiry_rate_limit_window_seconds: int = 3600
+
+    # Shared-secret header (X-Admin-Key) gating admin-only endpoints (e.g.
+    # GET /api/v1/inquiries) until real per-user auth arrives in Phase 3
+    # (see docs/ROADMAP.md). Unset by default — admin endpoints refuse all
+    # requests until this is configured.
+    admin_api_key: str | None = None
+
 
 @lru_cache
 def get_settings() -> Settings:
