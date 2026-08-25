@@ -217,6 +217,8 @@ runtime and keeps it in `sessionStorage` only.
 - `pytest` — unit/integration tests against an in-memory SQLite DB (fast, no external
   dependency; Postgres-specific behavior is exercised via real migrations in CI/staging
   — see `docs/DEPLOYMENT.md`).
+- `docker build backend/` — validates `backend/Dockerfile` still builds (CI only, via
+  Buildx; not run as part of the local `pytest`/`ruff`/`mypy` loop).
 
 Both suites run in CI on every PR (`ci-frontend.yml`, `ci-backend.yml`), scoped by path
 so a frontend-only change doesn't trigger backend CI and vice versa.

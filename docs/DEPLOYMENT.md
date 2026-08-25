@@ -49,8 +49,10 @@ make frontend-dev
 
 - **`.github/workflows/ci-frontend.yml`** — runs on changes under `frontend/`:
   install → `format:check` → `lint` → `typecheck` → `build`.
-- **`.github/workflows/ci-backend.yml`** — runs on changes under `backend/`: install →
-  `ruff check` → `mypy` → `pytest`.
+- **`.github/workflows/ci-backend.yml`** — runs on changes under `backend/`: a
+  `quality` job (install → `ruff check` → `mypy` → `pytest`) and a `build` job that
+  builds `backend/Dockerfile` (via Buildx, not pushed anywhere) so a broken image
+  fails the PR instead of the next deploy. Both run in parallel.
 
 Both must pass before a PR merges; scoping by path keeps feedback fast and avoids
 unrelated failures blocking unrelated changes.
