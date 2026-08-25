@@ -3,6 +3,10 @@ dist
 dist-ssr
 *.local
 
+# Lighthouse CI output (frontend/lighthouserc.json runs this locally/in CI —
+# see .github/workflows/ci-frontend.yml)
+.lighthouseci/
+
 .DS_Store
 *.tsbuildinfo
 
